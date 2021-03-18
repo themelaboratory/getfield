@@ -30,24 +30,31 @@ if (!function_exists('gfGetFieldContent'))
 		$gfArrTV = $modx->getTemplateVarOutput($gfStrDocField,$gfIntDocId);
 		return $gfArrTV[$gfStrDocField];
 	*/
+		$parts = explode(",", $gfIntDocId);
+        	$finalOutput = '';
+		
+		foreach ($parts as $part){
+		    while ($gfArrParent = $modx->getDocument($part,'parent'))
+		    {
+			$gfArrTV = $modx->getTemplateVar($gfStrDocField,'*',$part);
 
-		while ($gfArrParent = $modx->getDocument($gfIntDocId,'parent'))
-		{
-			$gfArrTV = $modx->getTemplateVar($gfStrDocField,'*',$gfIntDocId);
 			if (($gfArrTV['value'] && substr($gfArrTV['value'],0,8) != '@INHERIT') or !$gfArrTV['value']) // tv default value is overriden (including empty)
 			{
-				$output = $modx->getTemplateVarOutput($gfStrDocField,$gfIntDocId);
-				$output = $output[$gfStrDocField];
-				break;
+			    $output = $modx->getTemplateVarOutput($gfStrDocField,$part);
+			    $output = $output[$gfStrDocField];
+			    break;
 			}
 			else // there is no parent with default value overriden
 			{
-				$output = trim(substr($gfArrTV['value'],8));
+			    $output = trim(substr($gfArrTV['value'],8));
 			}
-			$gfIntDocId = $gfArrParent['parent']; // move up one document in document tree
-		} // end while
+			$part = $gfArrParent['parent']; // move up one document in document tree
+		    } // end while
 
-		return $output;
+		    $finalOutput .= $output;
+		}
+
+		return $finalOutput;
 	}
 }
 
